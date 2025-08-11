@@ -156,5 +156,38 @@ const deleteCourt = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, {}, "Court deleted successfully."))
 })
+const getAllCourtsByOwner = asyncHandler(async (req, res) => {
+  // 1. Get the owner's ID from the request (set by your authentication middleware)
+  const ownerId = req.user?._id
 
-export { createCourt, getAllCourts, getCourtById, updateCourt, deleteCourt }
+  if (!ownerId) {
+    throw new ApiError(401, "User not authenticated")
+  }
+
+  // 2. Find all venues owned by this user to get their IDs
+  const venues = await Venue.find({ ownerId: ownerId }).select("_id")
+
+  // If the owner has no venues, they have no courts. Return an empty array.
+  if (!venues || venues.length === 0) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, [], "Owner has no venues or courts."))
+  }
+
+  // 3. Extract just the IDs from the venue documents
+  const venueIds = venues.map((venue) => venue._id)
+
+  // 4. Find all courts where the venueId is in the list of the owner's venue IDs
+  // We also populate the venue's name to be useful for the frontend table.
+  const courts = await Court.find({ venueId: { $in: venueIds } }).populate(
+    "venueId",
+    "name"
+  ) // Populates venueId with the venue document, but only includes the 'name' field
+
+  // 5. Return the successful response
+  return res
+    .status(200)
+    .json(new ApiResponse(200, courts, "Courts retrieved successfully."))
+})
+
+export { createCourt, getAllCourts, getCourtById, updateCourt, deleteCourt ,getAllCourtsByOwner}

@@ -1,5 +1,5 @@
 import { Router } from "express"
-import { createCourt } from "../controllers/court.controller.js"
+
 // import middleware for authentication if needed
 // import { verifyJWT } from '../middlewares/auth.middleware.js';
 
@@ -7,5 +7,21 @@ const router = Router()
 
 // Assuming you have middleware to protect this route
 router.route("/").post(/* verifyJWT, */ createCourt)
+
+import {
+  createCourt,
+  getAllCourtsByOwner,
+} from "../controllers/court.controller.js"
+import { verifyJWT } from "../middlewares/auth.middleware.js"
+import { authorizeRoles } from "../middlewares/authorizeRoles.middleware.js"
+
+// Assuming you have middleware to protect this route
+router.route("/").post(verifyJWT, createCourt)
+router.get(
+  "/getAllCourtsByOwner",
+  verifyJWT,
+  authorizeRoles("facilityowner"),
+  getAllCourtsByOwner
+)
 
 export default router

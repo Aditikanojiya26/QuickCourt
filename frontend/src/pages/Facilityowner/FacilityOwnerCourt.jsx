@@ -1,12 +1,12 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
+import FacilityOwnerVenuesAndCourtList from "./FacilityOwnerVenuesAndCourtList.jsx";
 
 function FacilityOwnerCourt() {
   return (
-    <div>
-      FacilityOwnerCourt
-      <NavLink to={"add-court"}>Add court</NavLink>
-    </div>
+   <div>
+      <FacilityOwnerVenuesAndCourtList />
+    </div>
   );
 }
 
