@@ -11,6 +11,8 @@ import ResetPassword from "../pages/auth/ResetPassword";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import RegistrationPage from "../pages/auth/RegistrationPage";
 import VerifyOtpPage from "../pages/auth/VerifyOtpPage";
+import FacilityOwnerLayout from "../pages/Facilityowner/FacilityOwnerLayout";
+import FacilityOwnerDashboard from "../pages/Facilityowner/FacilityOwnerDashboard";
 const router = createBrowserRouter([
   {
     path: "/register",
@@ -44,6 +46,19 @@ const router = createBrowserRouter([
         element: <AdminLayout />,  // Use AdminLayout here
         children: [
           { path: "dashboard", element: <AdminDashboard /> },
+          // other admin routes can go here
+        ],
+      },
+    ],
+  },
+  {
+    path: "/facilityowner",
+    element: <ProtectedRoute allowedRoles={["facilityowner"]} />,
+    children: [
+      {
+        element: <FacilityOwnerLayout />,  
+        children: [
+          { path: "dashboard", element: <FacilityOwnerDashboard /> },
           // other admin routes can go here
         ],
       },
