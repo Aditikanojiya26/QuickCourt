@@ -36,15 +36,7 @@ export const createVenue = asyncHandler(async (req, res) => {
   res.status(201).json(new ApiResponse(201, venue, "Venue created successfully"));
 });
 export const getAllVenues = asyncHandler(async (req, res) => {
-  const cityQuery = req.query.city;
-
-  let filter = { status: "approved" };
-
-  if (cityQuery) {
-    filter["location.city"] = { $regex: cityQuery, $options: "i" }; // case-insensitive search
-  }
-
-  const venues = await Venue.find(filter).populate("ownerId", "fullName email");
+  const venues = await Venue.find({ status: "approved" }).populate("ownerId", "fullName email");
 
   res.status(200).json(new ApiResponse(200, venues, "Venues fetched successfully"));
 });

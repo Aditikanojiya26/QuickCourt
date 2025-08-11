@@ -18,10 +18,15 @@ import VenueForm from "../pages/Facilityowner/VenueForm";
 import VenueDetails from "../pages/Facilityowner/VenueDetails";
 import FacilityOwnerCourt from "../pages/Facilityowner/FacilityOwnerCourt";
 import AddCourtForm from "../components/FacilityOwner/AddCourtForm";
+import ViewAllVenues from "../pages/User/ViewAllVenues";
 const router = createBrowserRouter([
   {
     path: "/register",
     element: <RegistrationPage />
+  },
+  {
+    path: "/browse",
+    element: <ViewAllVenues />
   },
   {
     path: "/verify-otp",
@@ -86,6 +91,7 @@ const router = createBrowserRouter([
     element: <ProtectedRoute allowedRoles={["user"]} />,
     children: [
       { index: true, element: <Dashboard /> },
+      
     ],
   },
 ]);

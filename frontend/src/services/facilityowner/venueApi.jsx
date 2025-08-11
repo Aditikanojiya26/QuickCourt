@@ -5,6 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 // Fetch function to get venues
 const fetchVenues = async () => {
   const response = await axiosInstance.get("venues/");
+  console.log(response.data.data)
   return response.data.data;  // <-- important
 };
 
