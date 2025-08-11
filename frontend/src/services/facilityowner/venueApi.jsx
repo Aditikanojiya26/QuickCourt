@@ -24,7 +24,7 @@ export const createVenue = (formData) =>
 const fetchVenueById = async (id) => {
 
   const response = await axiosInstance.get(`venues/${id}`);
-  console.log("Fetched venue:", response);
+  console.log()
   return response.data.data; // matches your API shape
 };
 

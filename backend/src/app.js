@@ -22,10 +22,10 @@ app.use("/api/v1/users", userRouter)
 import adminRouter from './routes/admin.routes.js'
 app.use("/api/v1/venues", venueRouter)
 import authRouter from "./routes/googleAuth.routes.js";
-
-
 app.use("/api/v1/auth", authRouter);
 import bookingRouter from './routes/booking.routes.js'
+import courtRouter from "./routes/court.routes.js"
+app.use("/api/v1/courts", courtRouter)
 app.use("/api/v1/booking",bookingRouter)
 import { errorHandler } from "./middlewares/errorHandler.js";
 app.use(errorHandler);

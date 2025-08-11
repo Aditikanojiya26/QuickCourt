@@ -16,6 +16,8 @@ import FacilityOwnerDashboard from "../pages/Facilityowner/FacilityOwnerDashboar
 import PendingVenues from "../pages/admin/PendingVenues";
 import VenueForm from "../pages/Facilityowner/VenueForm";
 import VenueDetails from "../pages/Facilityowner/VenueDetails";
+import FacilityOwnerCourt from "../pages/Facilityowner/FacilityOwnerCourt";
+import AddCourtForm from "../components/FacilityOwner/AddCourtForm";
 const router = createBrowserRouter([
   {
     path: "/register",
@@ -71,7 +73,9 @@ const router = createBrowserRouter([
 
         // Venue CRUD pages
        // { path: "venues", element: <VenueListPage /> },           // List venues
-        { path: "venues/create", element: <VenueForm /> },  // Create venue
+        { path: "venues/create", element: <VenueForm /> }, 
+        { path: "courts", element: <FacilityOwnerCourt /> }, // court
+          { path: "courts/add-court", element: <AddCourtForm /> }, // add-court // Create venue
         // { path: "venues/edit/:id", element: <VenueEditPage /> },  // Edit venue by ID
       ],
     },
