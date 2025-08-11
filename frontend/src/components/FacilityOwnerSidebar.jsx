@@ -14,8 +14,8 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const items = [
-  { title: "Home", icon: Home, href: "/facility-owner/dashboard" },
-  { title: "Add Venue", icon: Users, href: "/facility-owner/bookings" },
+  { title: "Home", icon: Home, href: "/facilityowner/dashboard" },
+  { title: "Add Venue", icon: Users, href: "/facilityowner/venues/create" },
   { title: "Active Courts", icon: BarChart2, href: "/facility-owner/courts" },
   { title: "Earnings", icon: CreditCard, href: "/facility-owner/earnings" },
   { title: "Booking Calendar", icon: Calendar, href: "/facility-owner/calendar" },
