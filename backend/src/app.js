@@ -19,6 +19,8 @@ import userRouter from './routes/user.routes.js'
 app.use("/api/v1/users", userRouter)
 import adminRouter from './routes/admin.routes.js'
 app.use("/api/v1/admin",adminRouter)
+import venueRouter from './routes/venue.routes.js'
+app.use("/api/v1/venues", venueRouter)
 import authRouter from "./routes/googleAuth.routes.js";
 import { errorHandler } from "./middlewares/errorHandler.js";
 app.use("/api/v1/auth", authRouter);
