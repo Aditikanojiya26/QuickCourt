@@ -1,13 +1,27 @@
-// routes/venue.routes.js
 import { Router } from "express";
-import { createVenue, getAllVenues, getVenueById, updateVenue, deleteVenue } from "../controllers/venue.controller.js";
+import {
+  createVenue,
+  getAllVenues,
+  getVenueById,
+  updateVenue,
+  deleteVenue
+} from "../controllers/venue.controller.js";
 
 import { authorizeRoles } from "../middlewares/authorizeRoles.middleware.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { upload } from "../middlewares/multer.middleware.js";
+
 
 const router = Router();
 
-router.post("/", verifyJWT, authorizeRoles("facilityowner"), createVenue);
+// Accept multiple images for venue photos
+router.post(
+  "/",
+  verifyJWT,
+  authorizeRoles("facilityowner"),
+  upload.array("photos", 10), // up to 10 images
+  createVenue
+);
 router.get("/", getAllVenues);
 router.get("/:id", getVenueById);
 router.put("/:id", verifyJWT, authorizeRoles("facilityowner"), updateVenue);
