@@ -5,7 +5,10 @@ import {
   createBooking,
   updateBookingStatus,
   getMyBookings,
-  getVenueBookings
+  getVenueBookings,
+  getCourtsByVenue,
+  getAvailableSlots,
+ 
 } from "../controllers/booking.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { authorizeRoles } from "../middlewares/authorizeRoles.middleware.js";
@@ -22,7 +25,8 @@ router.patch(
   authorizeRoles("facilityowner", "admin"),
   updateBookingStatus
 );
-
+router.get("/:venueId/courts", getCourtsByVenue);
+router.get("/slots", getAvailableSlots);
 // Get my bookings
 router.get("/my", verifyJWT, authorizeRoles("user"), getMyBookings);
 

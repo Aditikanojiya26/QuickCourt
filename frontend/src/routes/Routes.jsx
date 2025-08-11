@@ -19,6 +19,7 @@ import VenueDetails from "../pages/Facilityowner/VenueDetails";
 import FacilityOwnerCourt from "../pages/Facilityowner/FacilityOwnerCourt";
 import AddCourtForm from "../components/FacilityOwner/AddCourtForm";
 import ViewAllVenues from "../pages/User/ViewAllVenues";
+import BookVenue from "../pages/User/BookVenue";
 const router = createBrowserRouter([
   {
     path: "/register",
@@ -38,7 +39,7 @@ const router = createBrowserRouter([
    
   },
   {
-  path: "/venues/:id",
+  path: "/browse/venues/:id",
   element: <VenueDetails />
 },
   {
@@ -94,5 +95,9 @@ const router = createBrowserRouter([
       
     ],
   },
+  {
+    path: "/book",
+    element: <BookVenue />,
+  }
 ]);
 export default router;

@@ -1,11 +1,84 @@
 // controllers/booking.controller.js
 import { Booking } from "../models/booking.models.js";
+import { Court } from "../models/court.model.js";
 import { Venue } from "../models/venue.model.js";
-
+import dayjs from "dayjs"
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
+export const getCourtsByVenue = asyncHandler(async (req, res) => {
+  const { venueId } = req.params;
+  
+  // Validate venue exists
+  const venue = await Venue.findById(venueId);
+  if (!venue) {
+    throw new ApiError(404, "Venue not found");
+  }
+
+  // Fetch courts for this venue
+  const courts = await Court.find({ venueId });
+
+  res.status(200).json(new ApiResponse(200, courts, "Courts fetched successfully"));
+});
+
+// GET /bookings/slots?venueId=...&courtId=...&date=...
+
+
+export const getAvailableSlots = asyncHandler(async (req, res) => {
+  const { venueId, courtId, date } = req.query;
+
+  if (!venueId || !courtId || !date) {
+    throw new ApiError(400, "Missing required query parameters");
+  }
+
+  const venue = await Venue.findById(venueId);
+  if (!venue) throw new ApiError(404, "Venue not found");
+
+  const court = await Court.findById(courtId);
+  if (!court) throw new ApiError(404, "Court not found");
+
+  const dayOfWeek = dayjs(date).day(); // 0=Sun, 6=Sat
+  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+  // Select operating hours array based on day type
+  let operatingSlots = [];
+  if (isWeekend) {
+    operatingSlots = court.operatingHours.weekends || [];
+  } else {
+    operatingSlots = court.operatingHours.weekdays || [];
+  }
+
+  if (operatingSlots.length === 0) {
+    return res.status(200).json(new ApiResponse(200, [], "No operating hours for this day"));
+  }
+
+  // Fetch existing bookings
+  const bookings = await Booking.find({
+    venueId,
+    courtId,
+    date,
+    status: { $in: ["pending", "confirmed"] },
+  }).sort({ startTime: 1 });
+
+  const slots = [];
+
+  // Generate slots for **each operating slot**
+  for (const slot of operatingSlots) {
+    for (let t = slot.start; t < slot.end; t++) {
+      const isBooked = bookings.some(
+        (b) => b.startTime <= t && b.endTime > t
+      );
+      slots.push({
+        time: `${t}-${t + 1}`,
+        status: isBooked ? "booked" : "available",
+        pricePerHour: slot.pricePerHour,
+      });
+    }
+  }
+
+  res.status(200).json(new ApiResponse(200, slots, "Slots fetched successfully"));
+});
 
 
 export const createBooking = asyncHandler(async (req, res) => {
