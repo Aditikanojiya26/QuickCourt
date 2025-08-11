@@ -18,6 +18,7 @@ import {
   CardTitle,
   CardContent,
 } from "@/components/ui/card";
+import { toast } from "sonner";
 
 const VerifyOtpPage = () => {
   const { state } = useLocation(); // to get email from register page
@@ -34,11 +35,11 @@ const VerifyOtpPage = () => {
   const onSubmit = (data) => {
     mutation.mutate(data, {
       onSuccess: () => {
-        alert("OTP verified successfully!");
+        toast.success("OTP verified successfully!");
         navigate("/login");
       },
       onError: (error) => {
-        alert(error.response?.data?.message || "Invalid OTP");
+        toast.error(error.response?.data?.message || "Invalid OTP");
       },
     });
   };

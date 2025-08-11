@@ -24,7 +24,7 @@ const Navbar = () => {
                 <NavLink to="/" className="hover:text-red-500 transition">
                     <div className="flex items-center space-x-3">
                         <img src={logo} alt="Logo" className="h-10 w-10" />
-                        <span className="text-xl font-semibold">Reware</span>
+                        <span className="text-xl font-semibold">QuickCourt</span>
                     </div>
                 </NavLink>
 

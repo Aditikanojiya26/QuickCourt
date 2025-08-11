@@ -1,4 +1,5 @@
 import Navbar from "../components/Navbar.jsx";
+import banner from "../assets/banner2.jpg"
 
 const RootLayout = () => {
   return (
@@ -8,8 +9,20 @@ const RootLayout = () => {
       <Navbar />
 
       {/* Section 1: Hero */}
-      <section className="w-full h-screen bg-gradient-to-br from-purple-600 via-indigo-500 to-blue-500 flex items-center justify-center">
-        <h1 className="text-4xl md:text-6xl font-bold text-white">Section 1</h1>
+      <section className="w-full h-screen flex items-center justify-center" style={{
+        height: "calc(100vh - 4rem)", // 4rem = h-16
+        backgroundImage: `url(${banner})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}>
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center md:text-left">
+          <h1 className="text-4xl md:text-5xl font-bold text-black mb-4">
+            Find Venues Nearby
+          </h1>
+          <p className="text-black/100">
+            Easily explore sports venues and play with enthusiasts just like you.
+          </p>
+        </div>
       </section>
 
       {/* Section 2 */}
