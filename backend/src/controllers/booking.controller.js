@@ -1,20 +1,12 @@
 // controllers/booking.controller.js
-import { Booking } from "../models/booking.model.js";
+import { Booking } from "../models/booking.models.js";
 import { Venue } from "../models/venue.model.js";
-import asyncHandler from "../utils/asyncHandler.js";
-import ApiError from "../utils/ApiError.js";
-import ApiResponse from "../utils/ApiResponse.js";
 
-/**
- * @desc Create a booking
- * @route POST /api/bookings
- * @access Private (user)
- */
-import { Venue } from "../models/venue.model.js";
-import { Booking } from "../models/booking.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+
+
 
 export const createBooking = asyncHandler(async (req, res) => {
   const { venueId, courtId, date, startTime, duration } = req.body;
@@ -24,8 +16,8 @@ export const createBooking = asyncHandler(async (req, res) => {
   const venue = await Venue.findById(venueId);
   if (!venue) throw new ApiError(404, "Venue not found");
 
-  const openTime = venue.openTime; // e.g., 8 for 8:00 AM
-  const closeTime = venue.closeTime; // e.g., 20 for 8:00 PM
+  const openTime = venue.openTime; 
+  const closeTime = venue.closeTime; 
 
   if (startTime < openTime || startTime >= closeTime) {
     throw new ApiError(400, `Start time must be between ${openTime}:00 and ${closeTime - 1}:00`);

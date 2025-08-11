@@ -1,12 +1,14 @@
 // routes/booking.routes.js
 import { Router } from "express";
-import { verifyJWT, authorizeRoles } from "../middlewares/auth.middleware.js";
+
 import {
   createBooking,
   updateBookingStatus,
   getMyBookings,
   getVenueBookings
 } from "../controllers/booking.controller.js";
+import { verifyJWT } from "../middlewares/auth.middleware.js";
+import { authorizeRoles } from "../middlewares/authorizeRoles.middleware.js";
 
 const router = Router();
 

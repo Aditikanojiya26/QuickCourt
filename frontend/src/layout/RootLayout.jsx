@@ -1,6 +1,7 @@
 import Navbar from "../components/Navbar.jsx";
 import banner from "../assets/banner2.jpg"
 import LocationSearch from "../pages/User/Location_search.jsx";
+import VenuesPage from "../pages/Facilityowner/VenuesPage.jsx";
 
 
 const RootLayout = () => {
@@ -30,7 +31,7 @@ const RootLayout = () => {
 
       {/* Section 2 */}
       <section className="w-full h-screen bg-gradient-to-br from-yellow-100 via-pink-100 to-rose-200 flex items-center justify-center">
-        <h1 className="text-4xl md:text-6xl font-bold text-gray-800"></h1>
+        <VenuesPage/>
       </section>
 
       {/* Section 3 */}

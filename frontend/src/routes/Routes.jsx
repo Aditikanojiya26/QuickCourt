@@ -15,6 +15,7 @@ import FacilityOwnerLayout from "../pages/Facilityowner/FacilityOwnerLayout";
 import FacilityOwnerDashboard from "../pages/Facilityowner/FacilityOwnerDashboard";
 import PendingVenues from "../pages/admin/PendingVenues";
 import VenueForm from "../pages/Facilityowner/VenueForm";
+import VenueDetails from "../pages/Facilityowner/VenueDetails";
 const router = createBrowserRouter([
   {
     path: "/register",
@@ -27,7 +28,12 @@ const router = createBrowserRouter([
   {
     path:"/", 
     element:<RootLayout/>,
+   
   },
+  {
+  path: "/venues/:id",
+  element: <VenueDetails />
+},
   {
     path: "/login",
     element: <LoginPage />
