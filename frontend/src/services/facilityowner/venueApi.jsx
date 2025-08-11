@@ -1,8 +1,5 @@
 import axiosInstance from "../../utils/axios";
 
-
-
-
 export const fetchVenues = () => api.get("/").then((res) => res.data.data);
 export const fetchVenue = (id) => api.get(`/${id}`).then((res) => res.data.data);
 
