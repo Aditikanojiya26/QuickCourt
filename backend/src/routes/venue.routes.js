@@ -24,7 +24,7 @@ router.post(
 );
 router.get("/", getAllVenues);
 router.get("/:id", getVenueById);
-router.put("/:id", verifyJWT, authorizeRoles("facilityowner"), updateVenue);
+// router.put("/:id", verifyJWT, authorizeRoles("facilityowner"), updateVenue);
 router.delete("/:id", verifyJWT, authorizeRoles("facilityowner"), deleteVenue);
 
 export default router;

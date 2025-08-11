@@ -14,7 +14,7 @@ import { NavLink } from "react-router-dom";
 
 const items = [
   { title: "Home", icon: Home, href: "/" },
-  { title: "Inbox", icon: Inbox, href: "/inbox" },
+  { title: "Venue Approval", icon: Inbox, href: "/admin/venues/pending" },
   { title: "Calendar", icon: Calendar, href: "/calendar" },
   { title: "Search", icon: Search, href: "/search" },
   { title: "Settings", icon: Settings, href: "/settings" },

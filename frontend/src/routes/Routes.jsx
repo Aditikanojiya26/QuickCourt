@@ -13,6 +13,8 @@ import RegistrationPage from "../pages/auth/RegistrationPage";
 import VerifyOtpPage from "../pages/auth/VerifyOtpPage";
 import FacilityOwnerLayout from "../pages/Facilityowner/FacilityOwnerLayout";
 import FacilityOwnerDashboard from "../pages/Facilityowner/FacilityOwnerDashboard";
+import PendingVenues from "../pages/admin/PendingVenues";
+import VenueForm from "../pages/Facilityowner/VenueForm";
 const router = createBrowserRouter([
   {
     path: "/register",
@@ -46,24 +48,29 @@ const router = createBrowserRouter([
         element: <AdminLayout />,  // Use AdminLayout here
         children: [
           { path: "dashboard", element: <AdminDashboard /> },
+          { path: "venues/pending", element: <PendingVenues /> },
           // other admin routes can go here
         ],
       },
     ],
   },
   {
-    path: "/facilityowner",
-    element: <ProtectedRoute allowedRoles={["facilityowner"]} />,
-    children: [
-      {
-        element: <FacilityOwnerLayout />,  
-        children: [
-          { path: "dashboard", element: <FacilityOwnerDashboard /> },
-          // other admin routes can go here
-        ],
-      },
-    ],
-  },
+  path: "/facilityowner",
+  element: <ProtectedRoute allowedRoles={["facilityowner"]} />,
+  children: [
+    {
+      element: <FacilityOwnerLayout />,
+      children: [
+        { path: "dashboard", element: <FacilityOwnerDashboard /> },
+
+        // Venue CRUD pages
+       // { path: "venues", element: <VenueListPage /> },           // List venues
+        { path: "venues/create", element: <VenueForm /> },  // Create venue
+        // { path: "venues/edit/:id", element: <VenueEditPage /> },  // Edit venue by ID
+      ],
+    },
+  ],
+},
   {
     path: "/user/dashboard",
     element: <ProtectedRoute allowedRoles={["user"]} />,
