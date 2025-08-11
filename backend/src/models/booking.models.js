@@ -10,7 +10,7 @@ const bookingSchema = new Schema(
     startTime: { type: Number, required: true },
     endTime: { type: Number, required: true },
     totalPrice: { type: Number, required: true },
-    status: { type: String, enum: ["confirmed", "cancelled", "completed"], default: "confirmed" },
+    status: { type: String, enum: ["booked", "cancelled", "pending"], default: "pending" },
     rating: {
       type: Number,
       min: 0,
