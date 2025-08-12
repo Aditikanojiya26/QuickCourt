@@ -13,7 +13,6 @@ const Navbar = () => {
     const logoutMutation = useLogoutMutation();
     const navLinks = [
         { name: "Dashboard", path: dashboardPath },
-        { name: "About", path: "/about" },
         { name: "Browse", path: "/browse" }
     ];
 

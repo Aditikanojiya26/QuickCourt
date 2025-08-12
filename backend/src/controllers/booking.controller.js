@@ -118,7 +118,7 @@ export const createBooking = asyncHandler(async (req, res) => {
     startTime,
     endTime,
     totalPrice: pricePerHour * duration,
-    status: "pending",
+    status: "booked",
   });
 
   res.status(201).json(
