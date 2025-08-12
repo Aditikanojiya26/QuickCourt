@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 // --- API Service Functions ---
 const fetchVenues = async () => {
@@ -251,7 +252,7 @@ export default function AddCourtForm() {
     mutationFn: createCourts,
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["courts"] });
-      alert(data.message);
+      toast.success(data.message);
       reset({ courts: [] });
     },
     onError: (error) => alert(`Error: ${error.message}`),

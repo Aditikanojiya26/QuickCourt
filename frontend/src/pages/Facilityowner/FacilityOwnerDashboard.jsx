@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   BarChart, Bar,
@@ -7,8 +7,16 @@ import {
 } from "recharts";
 import { format, subDays, subWeeks, subMonths } from "date-fns";
 import { useAuth } from "../../context/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import axiosInstance from "../../utils/axios";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+
+const fetchDashboardAnalysis = async () => {
+  const { data } = await axiosInstance.get("booking/summary");
+  return data;
+};
 
 function generateDateLabels(period = "daily") {
   const today = new Date();
@@ -29,7 +37,6 @@ function generateDateLabels(period = "daily") {
   return labels;
 }
 
-// Simulate booking data for charts
 function generateBookingTrendData(period = "daily") {
   const labels = generateDateLabels(period);
   return labels.map(label => ({
@@ -56,21 +63,42 @@ function generatePeakHoursData() {
 }
 
 export default function FacilityOwnerDashboard() {
-  const [bookingTrendData, setBookingTrendData] = useState(generateBookingTrendData("daily"));
+  const { user, isLoading: userLoading, isError: userError } = useAuth();
+
+  const {
+    data: analysisData,
+    isLoading: analysisLoading,
+    isError: analysisError,
+    error: analysisErrorObj,
+  } = useQuery({
+    queryKey: ["ownerAnalysis"],
+    queryFn: fetchDashboardAnalysis,
+  });
+
+  const [bookingTrendData] = useState(generateBookingTrendData("daily"));
   const [earningsData] = useState(generateEarningsData());
   const [peakHoursData] = useState(generatePeakHoursData());
 
-  // KPIs - simulated
-  const totalBookings = 152;
-  const activeCourts = 7;
-  const earnings = 3500; // in dollars, simulated
- const { user, isLoading, isError } = useAuth();
+  if (userLoading) return <p>Loading user info...</p>;
+  if (userError) return <p>Error loading user info.</p>;
+
+  if (analysisLoading) return <p>Loading dashboard data...</p>;
+  if (analysisError)
+    return (
+      <p>
+        Error loading dashboard data:{" "}
+        {analysisErrorObj?.message || "Unknown error"}
+      </p>
+    );
+
+  const totalBookings = analysisData?.totalBookings ?? 0;
+  const activeCourts = analysisData?.activeCourts ?? 0;
+  const earnings = analysisData?.earnings ?? 0;
+
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8">
-      {/* Welcome */}
       <h1 className="text-3xl font-bold">Welcome, {user.fullName}</h1>
 
-      {/* KPI cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded shadow">
           <p className="text-gray-500">Total Bookings</p>
@@ -90,13 +118,14 @@ export default function FacilityOwnerDashboard() {
         </div>
       </div>
 
-      {/* Charts */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Booking trends */}
         <div className="bg-white p-6 rounded shadow">
           <h2 className="text-xl font-semibold mb-4">Booking Trends (Last 7 days)</h2>
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={bookingTrendData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+            <LineChart
+              data={bookingTrendData}
+              margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+            >
               <XAxis dataKey="label" />
               <YAxis allowDecimals={false} />
               <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
@@ -107,7 +136,6 @@ export default function FacilityOwnerDashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Earnings summary */}
         <div className="bg-white p-6 rounded shadow">
           <h2 className="text-xl font-semibold mb-4">Earnings Summary</h2>
           <ResponsiveContainer width="100%" height={200}>
@@ -131,11 +159,13 @@ export default function FacilityOwnerDashboard() {
           </ResponsiveContainer>
         </div>
 
-        {/* Peak booking hours */}
         <div className="bg-white p-6 rounded shadow">
           <h2 className="text-xl font-semibold mb-4">Peak Booking Hours</h2>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={peakHoursData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
+            <BarChart
+              data={peakHoursData}
+              margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
+            >
               <XAxis dataKey="hour" />
               <YAxis allowDecimals={false} />
               <CartesianGrid stroke="#eee" strokeDasharray="5 5" />

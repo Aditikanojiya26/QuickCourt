@@ -1,13 +1,32 @@
 import React, { useState } from "react";
+import book from "../../assets/book.jpg"
 import { useLocation, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createBookingApi, fetchAvailableSlots, fetchCourtsByVenue } from "../../services/User/api";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import {
+  createBookingApi,
+  fetchAvailableSlots,
+  fetchCourtsByVenue,
+} from "../../services/User/api";
 
 import { queryClient } from "../../utils/queryClient";
+import { toast } from "sonner";
+
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+
 const BookVenue = () => {
   const location = useLocation();
   const navigate = useNavigate();
- 
+
   const { venueId } = location.state || {};
 
   const [courtId, setCourtId] = useState("");
@@ -17,25 +36,28 @@ const BookVenue = () => {
   const [error, setError] = useState(null);
 
   // Fetch courts for venue
-  const { data: courts = [], isLoading: courtsLoading, isError: courtsError } = useQuery({
-  queryKey: ["courts", venueId],
-  queryFn: () => fetchCourtsByVenue(venueId),
-  enabled: !!venueId,
-});
+  const {
+    data: courts = [],
+    isLoading: courtsLoading,
+    isError: courtsError,
+  } = useQuery({
+    queryKey: ["courts", venueId],
+    queryFn: () => fetchCourtsByVenue(venueId),
+    enabled: !!venueId,
+  });
 
-const { data: slots = [], isLoading: slotsLoading } = useQuery({
-  queryKey: ["slots", venueId, courtId, date],
-  queryFn: () => fetchAvailableSlots({ venueId, courtId, date }),
-  enabled: !!venueId && !!courtId && !!date,
-});
+  const { data: slots = [], isLoading: slotsLoading } = useQuery({
+    queryKey: ["slots", venueId, courtId, date],
+    queryFn: () => fetchAvailableSlots({ venueId, courtId, date }),
+    enabled: !!venueId && !!courtId && !!date,
+  });
 
-
-  const mutation = useMutation( {
+  const mutation = useMutation({
     mutationFn: createBookingApi,
     onSuccess: () => {
-      alert("Booking created successfully!");
+      toast.success("Booking created successfully!");
       queryClient.invalidateQueries(["slots", venueId, courtId, date]);
-      navigate("/my-bookings"); // change as needed
+      navigate("/user/dashboard"); // adjust if needed
     },
     onError: (err) => {
       setError(err.response?.data?.message || "Booking failed");
@@ -54,96 +76,124 @@ const { data: slots = [], isLoading: slotsLoading } = useQuery({
     });
   };
 
-  if (!venueId) return <p>Please select a venue first.</p>;
+  if (!venueId)
+    return (
+      <p className="text-center text-red-600 font-semibold">
+        Please select a venue first.
+      </p>
+    );
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md mx-auto p-4 space-y-4">
-      <h1 className="text-2xl font-bold mb-4">Book Venue</h1>
-
+    <div
+  className="h-screen flex justify-center items-center"
+  style={{
+    backgroundImage: `url(${book})`,
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+    backgroundRepeat: "no-repeat",
+  }}
+>
+  <form
+    onSubmit={handleSubmit}
+    className="max-w-md w-full p-6 space-y-6 bg-white rounded-lg shadow-md"
+  >
       {/* Courts dropdown */}
       <div>
-        <label className="block mb-1 font-semibold">Court</label>
+        <Label htmlFor="court" className="mb-1 block font-semibold">
+          Court
+        </Label>
         {courtsLoading ? (
           <p>Loading courts...</p>
         ) : courtsError ? (
-          <p>Error loading courts.</p>
+          <p className="text-red-600">Error loading courts.</p>
         ) : (
-          <select
-            value={courtId}
-            onChange={(e) => setCourtId(e.target.value)}
-            required
-            className="w-full p-2 border rounded"
-          >
-            <option value="">Select a court</option>
-            {courts.map((court) => (
-              <option key={court._id} value={court._id}>
-                {court.name || court._id}
-              </option>
-            ))}
-          </select>
+          <Select value={courtId} onValueChange={setCourtId} id="court" required>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a court" />
+            </SelectTrigger>
+            <SelectContent>
+              {courts.map((court) => (
+                <SelectItem key={court._id} value={court._id}>
+                  {court.name || court._id}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
       </div>
 
       {/* Date input */}
       <div>
-        <label className="block mb-1 font-semibold">Date</label>
-        <input
+        <Label htmlFor="date" className="mb-1 block font-semibold">
+          Date
+        </Label>
+        <Input
           type="date"
+          id="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
           required
-          className="w-full p-2 border rounded"
         />
       </div>
 
-      {/* Start Time dropdown from available slots */}
+      {/* Start Time dropdown */}
       <div>
-        <label className="block mb-1 font-semibold">Start Time</label>
+        <Label htmlFor="startTime" className="mb-1 block font-semibold">
+          Start Time
+        </Label>
         {slotsLoading ? (
           <p>Loading available slots...</p>
         ) : (
-          <select
+          <Select
             value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
+            onValueChange={setStartTime}
+            id="startTime"
             required
-            className="w-full p-2 border rounded"
+            disabled={!slots.length}
           >
-            <option value="">Select a start time</option>
-            {slots
-              .filter((slot) => slot.status === "available")
-              .map((slot, idx) => (
-                <option key={idx} value={Number(slot.time.split("-")[0])}>
-                  {slot.time}
-                </option>
-              ))}
-          </select>
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select a start time" />
+            </SelectTrigger>
+            <SelectContent>
+              {slots
+                .filter((slot) => slot.status === "available")
+                .map((slot, idx) => (
+                  <SelectItem key={idx} value={String(slot.time.split("-")[0])}>
+                    {slot.time}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
         )}
       </div>
 
       {/* Duration input */}
       <div>
-        <label className="block mb-1 font-semibold">Duration (hours)</label>
-        <input
+        <Label htmlFor="duration" className="mb-1 block font-semibold">
+          Duration (hours)
+        </Label>
+        <Input
           type="number"
           min="1"
           max="10"
+          id="duration"
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
           required
-          className="w-full p-2 border rounded"
         />
       </div>
 
-      <button
+      <Button
         type="submit"
         disabled={mutation.isLoading}
-        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition disabled:opacity-50"
+        className="w-full"
       >
         {mutation.isLoading ? "Booking..." : "Book Venue"}
-      </button>
+      </Button>
 
-      {error && <p className="text-red-600 mt-2">{error}</p>}
+      {error && <p className="text-red-600 mt-2 text-center">{error}</p>}
     </form>
+    </div>
   );
 };
 

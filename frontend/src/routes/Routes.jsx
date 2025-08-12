@@ -20,6 +20,9 @@ import FacilityOwnerCourt from "../pages/Facilityowner/FacilityOwnerCourt";
 import AddCourtForm from "../components/FacilityOwner/AddCourtForm";
 import ViewAllVenues from "../pages/User/ViewAllVenues";
 import BookVenue from "../pages/User/BookVenue";
+import OwnerBookingsTable from "../pages/Facilityowner/OwnerBookingsTable";
+import ApproveRejected from "../pages/admin/ApproveRejected";
+import { Book } from "lucide-react";
 const router = createBrowserRouter([
   {
     path: "/register",
@@ -39,7 +42,7 @@ const router = createBrowserRouter([
    
   },
   {
-  path: "/browse/venues/:id",
+  path: "/venues/:id",
   element: <VenueDetails />
 },
   {
@@ -63,6 +66,7 @@ const router = createBrowserRouter([
         children: [
           { path: "dashboard", element: <AdminDashboard /> },
           { path: "venues/pending", element: <PendingVenues /> },
+          { path: "venues/approve-rejected", element: <ApproveRejected /> },
           // other admin routes can go here
         ],
       },
@@ -76,7 +80,7 @@ const router = createBrowserRouter([
       element: <FacilityOwnerLayout />,
       children: [
         { path: "dashboard", element: <FacilityOwnerDashboard /> },
-
+        { path: "calendar", element: <OwnerBookingsTable /> },
         // Venue CRUD pages
        // { path: "venues", element: <VenueListPage /> },           // List venues
         { path: "venues/create", element: <VenueForm /> }, 
@@ -97,7 +101,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/book",
-    element: <BookVenue />,
+     element: <ProtectedRoute allowedRoles={["user"]} />,
+    children: [
+      { index: true, element: <BookVenue /> },
+      
+    ],
   }
 ]);
 export default router;

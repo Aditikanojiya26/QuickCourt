@@ -34,6 +34,7 @@ export default function PendingVenues() {
               <p className="mt-2 text-gray-800">{venue.description}</p>
               <p className="text-sm mt-1">Type: {venue.venueType}</p>
               <p className="text-sm">Owner: {venue.ownerId?.fullName}</p>
+              <p className="text-sm">Owner email: {venue.ownerId?.email}</p>
               <div className="mt-3 flex gap-2">
                 <button
                   onClick={() => handleApprove(venue._id)}

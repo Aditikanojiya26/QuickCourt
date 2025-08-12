@@ -8,6 +8,8 @@ import {
   getVenueBookings,
   getCourtsByVenue,
   getAvailableSlots,
+  analysis,
+  getOwnerBookings,
  
 } from "../controllers/booking.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -25,10 +27,11 @@ router.patch(
   authorizeRoles("facilityowner", "admin"),
   updateBookingStatus
 );
+router.post("/bookslot",verifyJWT,createBooking)
 router.get("/:venueId/courts", getCourtsByVenue);
 router.get("/slots", getAvailableSlots);
 // Get my bookings
-router.get("/my", verifyJWT, authorizeRoles("user"), getMyBookings);
+router.get("/mybooking", verifyJWT, authorizeRoles("user"), getMyBookings);
 
 // Get all bookings for a venue (owner/admin)
 router.get(
@@ -37,5 +40,12 @@ router.get(
   authorizeRoles("facilityowner", "admin"),
   getVenueBookings
 );
+router.get(
+  "/summary",verifyJWT,analysis
+);
+router.get(
+  "/getOwnerBooking",verifyJWT,getOwnerBookings
+);
+
 
 export default router;

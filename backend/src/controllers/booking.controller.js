@@ -85,60 +85,31 @@ export const createBooking = asyncHandler(async (req, res) => {
   const { venueId, courtId, date, startTime, duration } = req.body;
   const userId = req.user._id;
 
-  // 1. Validate venue
   const venue = await Venue.findById(venueId);
   if (!venue) throw new ApiError(404, "Venue not found");
 
-  const openTime = venue.openTime; 
-  const closeTime = venue.closeTime; 
+  const court = await Court.findById(courtId);
+  if (!court) throw new ApiError(404, "Court not found");
 
-  if (startTime < openTime || startTime >= closeTime) {
-    throw new ApiError(400, `Start time must be between ${openTime}:00 and ${closeTime - 1}:00`);
+  // Get pricePerHour from court operatingHours or fallback
+  // Example: assuming pricePerHour is inside court.operatingHours.weekdays[0].pricePerHour
+  let pricePerHour = 0;
+  const day = new Date(date).getDay(); // 0=Sunday, 1=Monday, ...
+  const isWeekend = (day === 0 || day === 6);
+
+  if (isWeekend && court.operatingHours?.weekends?.length > 0) {
+    pricePerHour = court.operatingHours.weekends[0].pricePerHour;
+  } else if (court.operatingHours?.weekdays?.length > 0) {
+    pricePerHour = court.operatingHours.weekdays[0].pricePerHour;
   }
 
-  // 2. Get all bookings for that court & date
-  const bookings = await Booking.find({
-    venueId,
-    courtId,
-    date,
-    status: { $in: ["pending", "confirmed"] }
-  }).sort({ startTime: 1 });
-
-  // 3. Build slot map for the day
-  const slots = [];
-  for (let t = openTime; t < closeTime; t++) {
-    const isBooked = bookings.some(
-      b => b.startTime <= t && b.endTime > t
-    );
-    slots.push({
-      time: `${t}-${t + 1}`,
-      status: isBooked ? "booked" : "available"
-    });
+  if (!pricePerHour) {
+    // fallback to venue price or 0 if unavailable
+    pricePerHour = venue.pricePerHour || 0;
   }
 
-  // 4. Calculate maximum possible duration from selected start time
-  const startSlotIndex = startTime - openTime;
-  let maxDuration = 0;
-  for (let i = startSlotIndex; i < slots.length; i++) {
-    if (slots[i].status === "booked") break;
-    maxDuration++;
-  }
-
-  // 5. Check if requested duration fits
-  if (duration > maxDuration) {
-    throw new ApiError(
-      400,
-      `Only ${maxDuration} hour(s) available starting at ${startTime}:00`
-    );
-  }
-
-  // 6. Calculate end time
   const endTime = startTime + duration;
-  if (endTime > closeTime) {
-    throw new ApiError(400, `Booking must end before ${closeTime}:00`);
-  }
 
-  // 7. Create booking
   const booking = await Booking.create({
     userId,
     courtId,
@@ -146,8 +117,8 @@ export const createBooking = asyncHandler(async (req, res) => {
     date,
     startTime,
     endTime,
-    totalPrice: venue.pricePerHour * duration, // optional if you have pricing
-    status: "pending"
+    totalPrice: pricePerHour * duration,
+    status: "pending",
   });
 
   res.status(201).json(
@@ -198,4 +169,67 @@ export const getVenueBookings = asyncHandler(async (req, res) => {
     .sort({ date: -1 });
 
   res.json(new ApiResponse(200, bookings, "Venue bookings fetched"));
+});
+
+export const analysis=asyncHandler(async (req, res) => {
+    const userId = req.user._id;
+  // Step 1: Find venues owned by user
+const venues = await Venue.find({ ownerId: userId });
+const venueIds = venues.map(v => v._id);
+
+if (venueIds.length === 0) {
+  return res.json({ totalBookings: 0, activeCourts: 0, earnings: 0 });
+}
+
+// Step 2: Find courts belonging to those venues
+const courts = await Court.find({ venueId: { $in: venueIds } });
+const courtIds = courts.map(c => c._id);
+
+if (courtIds.length === 0) {
+  return res.json({ totalBookings: 0, activeCourts: 0, earnings: 0 });
+}
+
+// Step 3: Count bookings for those courts
+const totalBookings = await Booking.countDocuments({
+  courtId: { $in: courtIds },
+  status: { $in: ["pending", "confirmed"] },
+});
+
+// Step 4: Active courts count
+const activeCourts = courts.length;
+
+// Step 5: Calculate earnings
+const earningsAgg = await Booking.aggregate([
+  { $match: { courtId: { $in: courtIds }, status: "confirmed" } },
+  { $group: { _id: null, totalEarnings: { $sum: "$totalPrice" } } },
+]);
+const earnings = earningsAgg.length > 0 ? earningsAgg[0].totalEarnings : 0;
+
+// Return
+res.json({ totalBookings, activeCourts, earnings });
+})
+
+export const getOwnerBookings = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  // Find venues owned by this user
+  const venues = await Venue.find({ ownerId: userId });
+  const venueIds = venues.map(v => v._id);
+
+  // Find courts in those venues
+  const courts = await Court.find({ venueId: { $in: venueIds } });
+  const courtIds = courts.map(c => c._id);
+
+  // Find bookings for those courts
+  const bookings = await Booking.find({ courtId: { $in: courtIds } })
+    .populate("venueId", "name location")  // include venue name and location
+    .populate("courtId", "name sportsType") // include court name and sport
+    .populate("userId", "fullName email")   // optionally include user info
+    .sort({ date: -1, startTime: 1 });
+
+  res.status(200).json({
+    status: "success",
+    results: bookings.length,
+    data: bookings,
+  });
 });

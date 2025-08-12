@@ -18,6 +18,16 @@ export const fetchAvailableSlots = async ({ venueId, courtId, date }) => {
 
 // Create booking
 export const createBookingApi = async (bookingData) => {
-  const res = await axiosInstance.post("/api/bookings", bookingData);
+  const res = await axiosInstance.post("booking/bookslot", bookingData);
   return res.data;
+};
+
+export const fetchMyBookings = async () => {
+  const res = await axiosInstance.get("booking/mybooking");
+  return res.data.data; // assuming your ApiResponse shape is { status, data, message }
+};
+
+export const fetchOwnerBookings = async () => {
+  const { data } = await axiosInstance.get("booking/getOwnerBooking");
+  return data.data; // just the array of bookings
 };

@@ -6,6 +6,7 @@ import {
   updateVenue,
   deleteVenue,
   getAllVenuesByOwner,
+  searchVenuesByCity,
 } from "../controllers/venue.controller.js"
 
 import { authorizeRoles } from "../middlewares/authorizeRoles.middleware.js"
@@ -29,6 +30,7 @@ router.get(
   getAllVenuesByOwner
 )
 router.get("/", getAllVenues)
+router.get("/search", searchVenuesByCity);
 router.get("/:id", getVenueById)
 // router.put("/:id", verifyJWT, authorizeRoles("facilityowner"), updateVenue);
 router.delete("/:id", verifyJWT, authorizeRoles("facilityowner"), deleteVenue)

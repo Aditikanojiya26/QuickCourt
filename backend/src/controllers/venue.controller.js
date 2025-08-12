@@ -76,3 +76,23 @@ export const getAllVenuesByOwner = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, venues, "Venues fetched successfully"))
 })
+
+export const searchVenuesByCity = asyncHandler(async (req, res) => {
+  const { city } = req.query;
+
+  if (!city) {
+    return res.status(400).json({ status: "fail", message: "City is required" });
+  }
+
+  // Case-insensitive search by city in location object
+  const venues = await Venue.find({
+    "location.city": { $regex: city, $options: "i" },
+    status: "approved", // optional filter to only approved venues
+  });
+
+  res.json({
+    status: "success",
+    results: venues.length,
+    data: venues,
+  });
+});

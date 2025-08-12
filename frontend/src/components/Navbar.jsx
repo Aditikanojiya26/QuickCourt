@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import logo from "../../public/vite.svg";
 import { useAuth } from "../context/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import logo from "../assets/logo.jpg"
 import { useLogoutMutation } from "../services/auth/useAuthQuery";
 import getUserRoleRedirectPath from "../utils/roleRedirect";
 const Navbar = () => {
@@ -14,8 +14,7 @@ const Navbar = () => {
     const navLinks = [
         { name: "Dashboard", path: dashboardPath },
         { name: "About", path: "/about" },
-
-        
+        { name: "Browse", path: "/browse" }
     ];
 
     return (

@@ -14,17 +14,18 @@ import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
 const items = [
-  { title: "Home", icon: Home, href: "/facilityowner/dashboard" },
+  { title: "Home", icon: Home, href: "/" },
   { title: "Add Venue", icon: Users, href: "/facilityowner/venues/create" },
- {
+  { title: "Add Court", icon: Users, href: "/facilityowner/courts/add-court" },
+  {
     title: "My Venues And Courts",
     icon: BarChart2,
     href: "/facilityowner/courts",
   },
-  { title: "Active Courts", icon: BarChart2, href: "/facilityowner/courts" },
+
   
   { title: "Earnings", icon: CreditCard, href: "/facility-owner/earnings" },
-  { title: "Booking Calendar", icon: Calendar, href: "/facility-owner/calendar" },
+  { title: "Booking Calendar", icon: Calendar, href: "/facilityowner/calendar" },
 ];
 export function FacilityOwnerSidebar() {
   const { user, isLoading, isError } = useAuth();
@@ -33,7 +34,7 @@ export function FacilityOwnerSidebar() {
     <Sidebar>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{user.fullName}</SidebarGroupLabel>
+          {/* <SidebarGroupLabel className="text-lg">{user.fullName}</SidebarGroupLabel> */}
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map(({ title, icon: Icon, href }) => (

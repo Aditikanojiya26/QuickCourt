@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import MyBookings from "./MyBookings";
 
 const UserDashboard = ({ user }) => {
   return (
@@ -38,7 +39,9 @@ const UserDashboard = ({ user }) => {
 
           <div className="text-sm space-y-1">
             <p>Email: {user.email}</p>
-            <p>Role: <Badge variant="outline">{user.role}</Badge></p>
+            <p>
+              Role: <Badge variant="outline">{user.role}</Badge>
+            </p>
           </div>
 
           <div className="text-xs text-muted-foreground">
@@ -46,6 +49,9 @@ const UserDashboard = ({ user }) => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Add My Bookings here */}
+      <MyBookings />
     </div>
   );
 };

@@ -3,11 +3,13 @@ import axiosInstance from "../../utils/axios";
 // src/hooks/useVenuesQuery.js
 import { useQuery } from "@tanstack/react-query";
 // Fetch function to get venues
-const fetchVenues = async () => {
+export const fetchVenues = async () => {
   const response = await axiosInstance.get("venues/");
-  console.log(response.data.data)
-  return response.data.data;  // <-- important
+  console.log(response.data.data);
+  return response.data.data; // <-- important
 };
+
+
 
 // Custom hook for venues query
 export const useVenuesQuery = () => {
@@ -37,4 +39,11 @@ export const useVenueByIdQuery = (id) => {
     enabled: !!id, // only runs if id is provided
     retry: 2,
   });
+};
+
+
+export const fetchCourts = async () => {
+  const response = await axiosInstance.get("courts/");
+  console.log(response.data.data);
+  return response.data.data; // <-- important
 };

@@ -10,11 +10,12 @@ router.route("/").post(/* verifyJWT, */ createCourt)
 
 import {
   createCourt,
+  getAllCourts,
   getAllCourtsByOwner,
 } from "../controllers/court.controller.js"
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 import { authorizeRoles } from "../middlewares/authorizeRoles.middleware.js"
-
+router.get("/", getAllCourts)
 // Assuming you have middleware to protect this route
 router.route("/").post(verifyJWT, createCourt)
 router.get(

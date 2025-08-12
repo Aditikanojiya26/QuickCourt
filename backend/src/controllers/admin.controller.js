@@ -54,3 +54,20 @@ export const rejectVenue = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, venue, "Venue rejected successfully"));
 });
+export const getApprovedVenues = async (req, res) => {
+  try {
+    const approvedVenues = await Venue.find({ status: "approved" });
+    res.status(200).json({ data: approvedVenues });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch approved venues" });
+  }
+};
+
+export const getRejectedVenues = async (req, res) => {
+  try {
+    const rejectedVenues = await Venue.find({ status: "rejected" });
+    res.status(200).json({ data: rejectedVenues });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch rejected venues" });
+  }
+};
