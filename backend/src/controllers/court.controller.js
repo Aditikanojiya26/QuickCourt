@@ -59,17 +59,17 @@ const createCourt = asyncHandler(async (req, res) => {
   }
 
   // Check for duplicate names against what's already in the database for this venue
-  const existingCourts = await Court.find({
-    venueId,
-    name: { $in: Array.from(courtNamesInRequest) },
-  })
-  if (existingCourts.length > 0) {
-    const existingNames = existingCourts.map((c) => c.name).join(", ")
-    throw new ApiError(
-      409,
-      `The following court names already exist in this venue: ${existingNames}.`
-    )
-  }
+  // const existingCourts = await Court.find({
+  //   venueId,
+  //   name: { $in: Array.from(courtNamesInRequest) },
+  // })
+  // if (existingCourts.length > 0) {
+  //   const existingNames = existingCourts.map((c) => c.name).join(", ")
+  //   throw new ApiError(
+  //     409,
+  //     `The following court names already exist in this venue: ${existingNames}.`
+  //   )
+  // }
 
   // 3. --- Create and Save the New Courts ---
   // Use insertMany for efficient bulk database insertion
@@ -189,5 +189,12 @@ const getAllCourtsByOwner = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, courts, "Courts retrieved successfully."))
 })
+export const getCourtsByVenue = asyncHandler(async (req, res) => {
+  const { venueId } = req.params;
 
+  const courts = await Court.find({ venueId })
+    .select("name sportsType operatingHours"); // select only needed fields
+
+  res.status(200).json(new ApiResponse(200, courts, "Courts fetched successfully"));
+});
 export { createCourt, getAllCourts, getCourtById, updateCourt, deleteCourt ,getAllCourtsByOwner}

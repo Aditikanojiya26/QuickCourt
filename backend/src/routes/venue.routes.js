@@ -31,6 +31,7 @@ router.get(
 )
 router.get("/", getAllVenues)
 router.get("/search", searchVenuesByCity);
+
 router.get("/:id", getVenueById)
 // router.put("/:id", verifyJWT, authorizeRoles("facilityowner"), updateVenue);
 router.delete("/:id", verifyJWT, authorizeRoles("facilityowner"), deleteVenue)

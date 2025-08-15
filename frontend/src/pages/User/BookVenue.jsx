@@ -1,285 +1,157 @@
-import React, { useState } from "react";
-import book from "../../assets/book.jpg"; // Assuming this path is correct
-import { useLocation, useNavigate } from "react-router-dom";
+import React, { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import {
-  createBookingApi,
-  fetchAvailableSlots,
-  fetchCourtsByVenue,
-} from "../../services/User/api";
-
-import { queryClient } from "../../utils/queryClient";
+import axiosInstance from "../../utils/axios";
 import { toast } from "sonner";
+import { useLocation, useNavigate } from "react-router-dom";
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import SimulatedPaymentGateway from "../Payment/SimulatedPaymentGateway"; // Import the new payment gateway component
-
-const BookVenue = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const { venueId, venueName } = location.state || {}; // Assuming venueName is also passed
-
+export default function BookingForm() {
+   const location = useLocation();
+   const navigate = useNavigate();
+  const venueId = location.state?.venueId;
+  const [sportType, setSportType] = useState("");
   const [courtId, setCourtId] = useState("");
-  const [courtName, setCourtName] = useState(""); // State to store court name for payment summary
   const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [duration, setDuration] = useState(1);
-  const [error, setError] = useState(null);
-  const [showPaymentGateway, setShowPaymentGateway] = useState(false); // New state for payment gateway visibility
-  const [bookingPayload, setBookingPayload] = useState(null); // To store booking details for payment
+  const [slot, setSlot] = useState("");
 
-  // Fetch courts for venue
-  const {
-    data: courts = [],
-    isLoading: courtsLoading,
-    isError: courtsError,
-  } = useQuery({
+  // 1️⃣ Fetch courts for venue
+  const { data: courtsData, isLoading: courtsLoading } = useQuery({
     queryKey: ["courts", venueId],
-    queryFn: () => fetchCourtsByVenue(venueId),
+    queryFn: async () => {
+      const res = await axiosInstance.get(`courts/venue/${venueId}`);
+      return res.data.data; // ApiResponse.data
+    },
     enabled: !!venueId,
   });
 
-  const { data: slots = [], isLoading: slotsLoading } = useQuery({
-    queryKey: ["slots", venueId, courtId, date],
-    queryFn: () => fetchAvailableSlots({ venueId, courtId, date }),
-    enabled: !!venueId && !!courtId && !!date,
+  // Extract available sport types
+  const sportTypes = useMemo(() => {
+    if (!courtsData) return [];
+    return [...new Set(courtsData.map(c => c.sportsType))];
+  }, [courtsData]);
+
+  // Filter courts by selected sport
+  const filteredCourts = useMemo(() => {
+    if (!courtsData || !sportType) return [];
+    return courtsData.filter(c => c.sportsType === sportType);
+  }, [courtsData, sportType]);
+
+  // 2️⃣ Fetch available slots
+  const { data: slotsData, isLoading: slotsLoading } = useQuery({
+    queryKey: ["slots", courtId, date],
+    queryFn: async () => {
+      const res = await axiosInstance.get(`booking/slots`, {
+        params: { courtId, date }
+      });
+      return res.data.data; // ApiResponse.data
+    },
+    enabled: !!courtId && !!date,
   });
 
+  // 3️⃣ Book slot
   const mutation = useMutation({
-    mutationFn: createBookingApi,
+    mutationFn: async () => {
+      const res = await axiosInstance.post("/booking/bookslot", {
+        venueId,
+        courtId,
+        sport: sportType,
+        date,
+        slot
+      });
+      return res.data;
+    },
     onSuccess: () => {
-      toast.success("Booking created successfully!");
-      queryClient.invalidateQueries(["slots", venueId, courtId, date]);
-      setShowPaymentGateway(false); // Hide payment gateway
-      navigate("/user/dashboard"); // Adjust if needed
+      toast.success("Booking successful!");
+      navigate("/user/dashboard");
     },
     onError: (err) => {
-      setError(err.response?.data?.message || "Booking failed");
-      toast.error(err.response?.data?.message || "Booking failed!");
-      setShowPaymentGateway(false); // Hide payment gateway on error
-    },
+      toast.error(err.response?.data?.message || "Booking failed");
+    }
   });
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setError(null);
-
-    // Prepare booking details to pass to the payment gateway
-    const selectedCourt = courts.find((court) => court._id === courtId);
-    if (!selectedCourt) {
-      toast.error("Please select a valid court.");
-      return;
-    }
-
-    const payload = {
-      venueId,
-      courtId,
-      date,
-      startTime: Number(startTime),
-      duration: Number(duration),
-      courtName: selectedCourt.name || selectedCourt._id, // Pass court name for display
-      venueName: venueName, // Pass venue name for display
-    };
-    setBookingPayload(payload);
-    setShowPaymentGateway(true); // Show the payment gateway
-  };
-
-  // Callback from SimulatedPaymentGateway when payment is successful
-  const handlePaymentSuccess = (payload) => {
-    mutation.mutate(payload); // Trigger the actual booking mutation
-  };
-
-  // Callback from SimulatedPaymentGateway when payment fails or is cancelled
-  const handlePaymentFailure = () => {
-    setShowPaymentGateway(false); // Hide payment gateway
-    setError("Payment was not completed.");
-  };
-
-  const handleCancelPayment = () => {
-    setShowPaymentGateway(false);
-    setBookingPayload(null);
-    setError("Booking cancelled by user.");
-  };
-
-  if (!venueId)
-    return (
-      <p className="text-center text-red-600 font-semibold mt-10">
-        Please select a venue first to book a slot.
-      </p>
-    );
-
   return (
-    <div
-      className="h-screen flex justify-center items-center p-4"
-      style={{
-        backgroundImage: `url(${book})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }}
-    >
-      {!showPaymentGateway ? ( // Conditionally render booking form or payment gateway
-        <form
-          onSubmit={handleSubmit}
-          className="max-w-md w-full p-6 space-y-6 bg-white rounded-lg shadow-xl"
-        >
-          <h2 className="text-2xl font-bold text-center text-gray-800 mb-6">
-            Book Your Slot
-          </h2>
+    <div className="max-w-lg mx-auto p-4 bg-white shadow rounded">
+      <h2 className="text-2xl font-bold mb-4">Book a Court</h2>
 
-          {/* Courts dropdown */}
-          <div>
-            <Label
-              htmlFor="court"
-              className="mb-1 block font-semibold text-gray-700"
-            >
-              Court
-            </Label>
-            {courtsLoading ? (
-              <p className="text-gray-600">Loading courts...</p>
-            ) : courtsError ? (
-              <p className="text-red-600">Error loading courts.</p>
-            ) : (
-              <Select
-                value={courtId}
-                onValueChange={(value) => {
-                  setCourtId(value);
-                  const selectedCourt = courts.find((c) => c._id === value);
-                  if (selectedCourt) setCourtName(selectedCourt.name);
-                }}
-                id="court"
-                required
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a court" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {courts.map((court) => (
-                      <SelectItem key={court._id} value={court._id}>
-                        {court.name || `Court ${court._id.substring(0, 4)}`}
-                      </SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
+      {/* Sport Type */}
+      <label className="block mb-2 font-medium">Select Sport</label>
+      <select
+        value={sportType}
+        onChange={e => {
+          setSportType(e.target.value);
+          setCourtId("");
+          setSlot("");
+        }}
+        className="w-full border p-2 rounded mb-4"
+      >
+        <option value="">-- Select Sport --</option>
+        {sportTypes.map(type => (
+          <option key={type} value={type}>{type}</option>
+        ))}
+      </select>
 
-          {/* Date input */}
-          <div>
-            <Label
-              htmlFor="date"
-              className="mb-1 block font-semibold text-gray-700"
-            >
-              Date
-            </Label>
-            <Input
-              type="date"
-              id="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              required
-              min={new Date().toISOString().split("T")[0]} // Prevents selecting past dates
-            />
-          </div>
-
-          {/* Start Time dropdown */}
-          <div>
-            <Label
-              htmlFor="startTime"
-              className="mb-1 block font-semibold text-gray-700"
-            >
-              Start Time
-            </Label>
-            {slotsLoading ? (
-              <p className="text-gray-600">Loading available slots...</p>
-            ) : (
-              <Select
-                value={startTime}
-                onValueChange={setStartTime}
-                id="startTime"
-                required
-                disabled={!slots.length || !courtId || !date}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue
-                    placeholder={
-                      slots.length
-                        ? "Select a start time"
-                        : "No slots available for selected date/court"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {slots
-                      .filter((slot) => slot.status === "available")
-                      .map((slot, idx) => (
-                        <SelectItem
-                          key={idx}
-                          value={String(slot.time.split("-")[0])}
-                        >
-                          {slot.time}
-                        </SelectItem>
-                      ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
-          {/* Duration input */}
-          <div>
-            <Label
-              htmlFor="duration"
-              className="mb-1 block font-semibold text-gray-700"
-            >
-              Duration (hours)
-            </Label>
-            <Input
-              type="number"
-              min="1"
-              max="10"
-              id="duration"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              required
-            />
-          </div>
-
-          <Button
-            type="submit"
-            disabled={mutation.isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-300"
+      {/* Court */}
+      {filteredCourts.length > 0 && (
+        <>
+          <label className="block mb-2 font-medium">Select Court</label>
+          <select
+            value={courtId}
+            onChange={e => {
+              setCourtId(e.target.value);
+              setSlot("");
+            }}
+            className="w-full border p-2 rounded mb-4"
           >
-            Proceed to Payment
-          </Button>
-
-          {error && <p className="text-red-600 mt-4 text-center">{error}</p>}
-        </form>
-      ) : (
-        // Render the payment gateway when showPaymentGateway is true
-        <SimulatedPaymentGateway
-          bookingDetails={bookingPayload}
-          onPaymentSuccess={handlePaymentSuccess}
-          onPaymentFailure={handlePaymentFailure}
-          onCancel={handleCancelPayment}
-        />
+            <option value="">-- Select Court --</option>
+            {filteredCourts.map(court => (
+              <option key={court._id} value={court._id}>{court.name}</option>
+            ))}
+          </select>
+        </>
       )}
+
+      {/* Date */}
+      {courtId && (
+        <>
+          <label className="block mb-2 font-medium">Select Date</label>
+          <input
+            type="date"
+            value={date}
+            onChange={e => setDate(e.target.value)}
+            className="w-full border p-2 rounded mb-4"
+            min={new Date().toISOString().split("T")[0]}
+          />
+        </>
+      )}
+
+      {/* Slots */}
+      {slotsLoading && <p>Loading slots...</p>}
+      {slotsData && slotsData.length > 0 && (
+        <>
+          <label className="block mb-2 font-medium">Select Slot</label>
+          <div className="grid grid-cols-2 gap-2 mb-4">
+            {slotsData.map(s => (
+              <button
+                key={s.slot}
+                onClick={() => setSlot(s.slot)}
+                className={`p-2 border rounded ${
+                  slot === s.slot ? "bg-blue-500 text-white" : "hover:bg-blue-100"
+                }`}
+              >
+                {s.slot}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Book Button */}
+      <button
+        onClick={() => mutation.mutate()}
+        disabled={!slot || mutation.isLoading}
+        className="w-full bg-green-500 text-white p-2 rounded hover:bg-green-600 disabled:bg-gray-300"
+      >
+        {mutation.isLoading ? "Booking..." : "Book Now"}
+      </button>
     </div>
   );
-};
-
-export default BookVenue;
+}

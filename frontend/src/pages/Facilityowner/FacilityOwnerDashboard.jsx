@@ -1,99 +1,55 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   BarChart, Bar,
   PieChart, Pie, Cell,
   ResponsiveContainer
 } from "recharts";
-import { format, subDays, subWeeks, subMonths } from "date-fns";
 import { useAuth } from "../../context/AuthContext";
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import axiosInstance from "../../utils/axios";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
-const fetchDashboardAnalysis = async () => {
-  const { data } = await axiosInstance.get("booking/summary");
-  return data;
+// Mock static data
+const mockAnalysisData = {
+  totalBookings: 45,
+  activeCourts: 8,
+  earnings: 12500,
 };
 
-function generateDateLabels(period = "daily") {
-  const today = new Date();
-  let labels = [];
-  if (period === "daily") {
-    for (let i = 6; i >= 0; i--) {
-      labels.push(format(subDays(today, i), "MMM d"));
-    }
-  } else if (period === "weekly") {
-    for (let i = 5; i >= 0; i--) {
-      labels.push(`Week ${format(subWeeks(today, i), "w")}`);
-    }
-  } else if (period === "monthly") {
-    for (let i = 5; i >= 0; i--) {
-      labels.push(format(subMonths(today, i), "MMM yyyy"));
-    }
-  }
-  return labels;
-}
+const mockTrendData = [
+  { label: "Mon", bookings: 5 },
+  { label: "Tue", bookings: 8 },
+  { label: "Wed", bookings: 7 },
+  { label: "Thu", bookings: 10 },
+  { label: "Fri", bookings: 6 },
+  { label: "Sat", bookings: 4 },
+  { label: "Sun", bookings: 5 },
+];
 
-function generateBookingTrendData(period = "daily") {
-  const labels = generateDateLabels(period);
-  return labels.map(label => ({
-    label,
-    bookings: Math.floor(Math.random() * 50) + 5,
-  }));
-}
+const mockEarningsData = [
+  { name: "Badminton", value: 5000 },
+  { name: "Tennis", value: 3000 },
+  
+];
 
-function generateEarningsData() {
-  return [
-    { name: "Courts", value: 400 },
-    { name: "Matches", value: 300 },
-    { name: "Rentals", value: 300 },
-    { name: "Others", value: 200 },
-  ];
-}
-
-function generatePeakHoursData() {
-  const hours = Array.from({ length: 12 }, (_, i) => `${8 + i} AM`);
-  return hours.map(hour => ({
-    hour,
-    bookings: Math.floor(Math.random() * 20),
-  }));
-}
+const mockPeakHoursData = [
+  { hour: "9 AM", bookings: 5 },
+  { hour: "10 AM", bookings: 8 },
+  { hour: "11 AM", bookings: 7 },
+  { hour: "12 PM", bookings: 10 },
+  { hour: "1 PM", bookings: 6 },
+  { hour: "2 PM", bookings: 4 },
+];
 
 export default function FacilityOwnerDashboard() {
   const { user, isLoading: userLoading, isError: userError } = useAuth();
 
-  const {
-    data: analysisData,
-    isLoading: analysisLoading,
-    isError: analysisError,
-    error: analysisErrorObj,
-  } = useQuery({
-    queryKey: ["ownerAnalysis"],
-    queryFn: fetchDashboardAnalysis,
-  });
-
-  const [bookingTrendData] = useState(generateBookingTrendData("daily"));
-  const [earningsData] = useState(generateEarningsData());
-  const [peakHoursData] = useState(generatePeakHoursData());
-
   if (userLoading) return <p>Loading user info...</p>;
   if (userError) return <p>Error loading user info.</p>;
 
-  if (analysisLoading) return <p>Loading dashboard data...</p>;
-  if (analysisError)
-    return (
-      <p>
-        Error loading dashboard data:{" "}
-        {analysisErrorObj?.message || "Unknown error"}
-      </p>
-    );
-
-  const totalBookings = analysisData?.totalBookings ?? 0;
-  const activeCourts = analysisData?.activeCourts ?? 0;
-  const earnings = analysisData?.earnings ?? 0;
+  const totalBookings = mockAnalysisData.totalBookings;
+  const activeCourts = mockAnalysisData.activeCourts;
+  const earnings = mockAnalysisData.earnings;
 
   return (
     <div className="max-w-7xl mx-auto p-6 space-y-8">
@@ -110,7 +66,8 @@ export default function FacilityOwnerDashboard() {
         </div>
         <div className="bg-white p-6 rounded shadow">
           <p className="text-gray-500">Earnings</p>
-          <p className="text-3xl font-semibold">${earnings.toLocaleString()}</p>
+          <p className="text-3xl font-semibold">{earnings.toLocaleString()}</p>
+
         </div>
         <div className="bg-white p-6 rounded shadow">
           <p className="text-gray-500">Booking Calendar</p>
@@ -119,13 +76,11 @@ export default function FacilityOwnerDashboard() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Booking Trends */}
         <div className="bg-white p-6 rounded shadow">
           <h2 className="text-xl font-semibold mb-4">Booking Trends (Last 7 days)</h2>
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart
-              data={bookingTrendData}
-              margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-            >
+            <LineChart data={mockTrendData}>
               <XAxis dataKey="label" />
               <YAxis allowDecimals={false} />
               <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
@@ -136,12 +91,13 @@ export default function FacilityOwnerDashboard() {
           </ResponsiveContainer>
         </div>
 
+        {/* Earnings */}
         <div className="bg-white p-6 rounded shadow">
           <h2 className="text-xl font-semibold mb-4">Earnings Summary</h2>
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie
-                data={earningsData}
+                data={mockEarningsData}
                 dataKey="value"
                 nameKey="name"
                 cx="50%"
@@ -150,7 +106,7 @@ export default function FacilityOwnerDashboard() {
                 fill="#8884d8"
                 label
               >
-                {earningsData.map((entry, index) => (
+                {mockEarningsData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
@@ -159,13 +115,11 @@ export default function FacilityOwnerDashboard() {
           </ResponsiveContainer>
         </div>
 
+        {/* Peak Hours */}
         <div className="bg-white p-6 rounded shadow">
           <h2 className="text-xl font-semibold mb-4">Peak Booking Hours</h2>
           <ResponsiveContainer width="100%" height={200}>
-            <BarChart
-              data={peakHoursData}
-              margin={{ top: 5, right: 20, bottom: 5, left: 0 }}
-            >
+            <BarChart data={mockPeakHoursData}>
               <XAxis dataKey="hour" />
               <YAxis allowDecimals={false} />
               <CartesianGrid stroke="#eee" strokeDasharray="5 5" />

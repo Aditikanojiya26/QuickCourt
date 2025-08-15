@@ -12,6 +12,7 @@ import {
   createCourt,
   getAllCourts,
   getAllCourtsByOwner,
+  getCourtsByVenue,
 } from "../controllers/court.controller.js"
 import { verifyJWT } from "../middlewares/auth.middleware.js"
 import { authorizeRoles } from "../middlewares/authorizeRoles.middleware.js"
@@ -24,5 +25,6 @@ router.get(
   authorizeRoles("facilityowner"),
   getAllCourtsByOwner
 )
+router.get("/venue/:venueId", getCourtsByVenue);
 
 export default router

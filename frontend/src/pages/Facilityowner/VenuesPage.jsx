@@ -3,6 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { NavLink, useNavigate } from "react-router-dom";
 import axiosInstance from "../../utils/axios";
 
+
+
 const VenuesPage = ({ city = "" }) => {
   const navigate = useNavigate();
 

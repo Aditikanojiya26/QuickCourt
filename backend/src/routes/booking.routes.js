@@ -10,6 +10,9 @@ import {
   getAvailableSlots,
   analysis,
   getOwnerBookings,
+  getBookingTrends,
+  getEarningsSummary,
+  getPeakHours,
  
 } from "../controllers/booking.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
@@ -46,6 +49,10 @@ router.get(
 router.get(
   "/getOwnerBooking",verifyJWT,getOwnerBookings
 );
+router.get("/trends", getBookingTrends); // e.g. ?period=daily
+router.get("/earnings", getEarningsSummary);
+// router.get("/peak-hours", getPeakHours);
+
 
 
 export default router;

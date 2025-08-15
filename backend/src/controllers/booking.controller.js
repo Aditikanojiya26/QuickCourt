@@ -1,11 +1,23 @@
-// controllers/booking.controller.js
-import { Booking } from "../models/booking.models.js";
+
 import { Court } from "../models/court.model.js";
 import { Venue } from "../models/venue.model.js";
-import dayjs from "dayjs"
+
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { Booking } from "../models/booking.models.js";
+import { getAvailableSlotsForCourtOnDate } from "../utils/booking.utils.js";
+export const getAvailableSlots = asyncHandler(async (req, res) => {
+  const { courtId, date } = req.query;
+
+  if (!courtId || !date) {
+    return res.status(400).json(new ApiResponse(400, null, "courtId and date are required"));
+  }
+
+  const slots = await getAvailableSlotsForCourtOnDate(courtId, date);
+  res.status(200).json(new ApiResponse(200, slots, "Slots fetched successfully"));
+});
+
 
 export const getCourtsByVenue = asyncHandler(async (req, res) => {
   const { venueId } = req.params;
@@ -21,118 +33,62 @@ export const getCourtsByVenue = asyncHandler(async (req, res) => {
 
   res.status(200).json(new ApiResponse(200, courts, "Courts fetched successfully"));
 });
+function parseTimeToNumber(timeStr) {
+  const [h, m] = timeStr.split(':').map(Number);
+  return h + (m / 60);
+}
 
-// GET /bookings/slots?venueId=...&courtId=...&date=...
 
-
-export const getAvailableSlots = asyncHandler(async (req, res) => {
-  const { venueId, courtId, date } = req.query;
-
-  if (!venueId || !courtId || !date) {
-    throw new ApiError(400, "Missing required query parameters");
-  }
-
-  const venue = await Venue.findById(venueId);
-  if (!venue) throw new ApiError(404, "Venue not found");
-
-  const court = await Court.findById(courtId);
-  if (!court) throw new ApiError(404, "Court not found");
-
-  const dayOfWeek = dayjs(date).day(); // 0=Sun, 6=Sat
-  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-  // Select operating hours array based on day type
-  let operatingSlots = [];
-  if (isWeekend) {
-    operatingSlots = court.operatingHours.weekends || [];
-  } else {
-    operatingSlots = court.operatingHours.weekdays || [];
-  }
-
-  if (operatingSlots.length === 0) {
-    return res.status(200).json(new ApiResponse(200, [], "No operating hours for this day"));
-  }
-
-  // Fetch existing bookings
-  const bookings = await Booking.find({
-    venueId,
-    courtId,
-    date,
-    status: { $in: ["pending", "confirmed"] },
-  }).sort({ startTime: 1 });
-
-  const slots = [];
-
-  // Generate slots for **each operating slot**
-  for (const slot of operatingSlots) {
-    for (let t = slot.start; t < slot.end; t++) {
-      const isBooked = bookings.some(
-        (b) => b.startTime <= t && b.endTime > t
-      );
-      slots.push({
-        time: `${t}-${t + 1}`,
-        status: isBooked ? "booked" : "available",
-        pricePerHour: slot.pricePerHour,
-      });
-    }
-  }
-
-  res.status(200).json(new ApiResponse(200, slots, "Slots fetched successfully"));
-});
 
 
 export const createBooking = asyncHandler(async (req, res) => {
-  const { venueId, courtId, date, startTime, duration } = req.body;
-  const userId = req.user._id;
+  const { venueId, courtId, sport, date, slot } = req.body;
 
-  const venue = await Venue.findById(venueId);
-  if (!venue) throw new ApiError(404, "Venue not found");
-
-  const court = await Court.findById(courtId);
-  if (!court) throw new ApiError(404, "Court not found");
-
-  // Get pricePerHour from court operatingHours or fallback
-  // Example: assuming pricePerHour is inside court.operatingHours.weekdays[0].pricePerHour
-  let pricePerHour = 0;
-  const day = new Date(date).getDay(); // 0=Sunday, 1=Monday, ...
-  const isWeekend = (day === 0 || day === 6);
-
-  if (isWeekend && court.operatingHours?.weekends?.length > 0) {
-    pricePerHour = court.operatingHours.weekends[0].pricePerHour;
-  } else if (court.operatingHours?.weekdays?.length > 0) {
-    pricePerHour = court.operatingHours.weekdays[0].pricePerHour;
+  if (!venueId || !courtId || !sport || !date || !slot) {
+    return res.status(400).json({ status: false, message: 'Missing required fields' });
   }
 
-  if (!pricePerHour) {
-    // fallback to venue price or 0 if unavailable
-    pricePerHour = venue.pricePerHour || 0;
+  const court = await Court.findById(courtId).lean();
+  if (!court) return res.status(404).json({ status: false, message: 'Court not found' });
+  if (String(court.venueId) !== String(venueId)) {
+    return res.status(400).json({ status: false, message: 'Court does not belong to venue' });
+  }
+  if (court.sportsType?.toLowerCase() !== sport?.toLowerCase()) {
+    return res.status(400).json({ status: false, message: 'Selected sport does not match court sport' });
   }
 
-  const endTime = startTime + duration;
+  // Validate slot availability
+  const available = await getAvailableSlotsForCourtOnDate(courtId, date);
+  const slotObj = available.find((s) => s.slot === slot && !s.isBooked);
+  if (!slotObj) {
+    return res.status(409).json({ status: false, message: 'Slot not available' });
+  }
+
+  // Parse slot into startTime and endTime
+  const [startStr, endStr] = slot.split('-');
+const startTime = parseTimeToNumber(startStr);
+const endTime = parseTimeToNumber(endStr);
+
+
+  const totalPrice = slotObj.pricePerHour; // or multiply by duration if not 1 hour
 
   const booking = await Booking.create({
-    userId,
-    courtId,
     venueId,
+    courtId,
+    userId: req.user._id, // attach logged-in user
+    sport,
     date,
+    slot,
     startTime,
     endTime,
-    totalPrice: pricePerHour * duration,
-    status: "booked",
+    totalPrice,
+    status: 'pending',
   });
 
-  res.status(201).json(
-    new ApiResponse(201, booking, "Booking created successfully")
-  );
+  res.status(201).json(new ApiResponse(201, booking, 'Booking created successfully'));
 });
 
 
-
-/**
- * @desc Update booking status (confirm/cancel/complete)
- * @route PATCH /api/bookings/:id
- * @access Private (admin or owner)
- */
 export const updateBookingStatus = asyncHandler(async (req, res) => {
   const { status } = req.body;
 
@@ -233,3 +189,137 @@ export const getOwnerBookings = asyncHandler(async (req, res) => {
     data: bookings,
   });
 });
+
+
+// Helper: get dates between two dates (inclusive)
+function getDatesInRange(startDate, endDate) {
+  const dates = [];
+  let current = new Date(startDate);
+  while (current <= endDate) {
+    dates.push(new Date(current));
+    current.setDate(current.getDate() + 1);
+  }
+  return dates;
+}
+
+// 1. Booking summary (total bookings, active courts, earnings)
+
+
+// 2. Booking trends - last 7 days daily count
+export async function getBookingTrends(req, res) {
+  try {
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 6);
+
+    const trends = await Booking.aggregate([
+      {
+        $match: {
+          date: { $gte: startDate, $lte: today },
+          status: "booked",
+        },
+      },
+      {
+        $group: {
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+          bookings: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Fill missing dates with 0 bookings
+    const datesInRange = getDatesInRange(startDate, today);
+    const result = datesInRange.map((date) => {
+      const dateStr = date.toISOString().slice(0, 10);
+      const found = trends.find((t) => t._id === dateStr);
+      return {
+        label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        bookings: found ? found.bookings : 0,
+      };
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
+// 3. Earnings summary breakdown (group by category - example categories: Courts, Matches, Rentals, Others)
+// Here, we'll assume you have booking types or categories stored; if not, just send fixed data or extend your schema.
+// For now, aggregate by venueId as a sample
+export async function getEarningsSummary(req, res) {
+  try {
+    // Sample: group earnings by venueId and populate venue name (if you want)
+    // For simplicity, we'll group by venueId and return totalPrice sum
+
+    const earnings = await Booking.aggregate([
+      { $match: { status: "booked" } },
+      {
+        $group: {
+          _id: "$venueId",
+          totalEarnings: { $sum: "$totalPrice" },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { totalEarnings: -1 } },
+      { $limit: 5 }, // top 5 venues by earnings
+    ]);
+
+    // Optionally populate venue names here if you want
+
+    // Format data to send name and value for pie chart
+    // For now just use venueId string as name placeholder
+    const response = earnings.map((item, idx) => ({
+      name: `Venue ${item._id.toString().slice(-4)}`, // mock name
+      value: item.totalEarnings,
+    }));
+
+    res.json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
+
+// 4. Peak booking hours (group by startTime hour)
+export async function getPeakHours(req, res) {
+  try {
+    // Consider bookings for last 30 days
+    const today = new Date();
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() - 29);
+
+    const peakHours = await Booking.aggregate([
+      {
+        $match: {
+          date: { $gte: startDate, $lte: today },
+          status: "booked",
+        },
+      },
+      {
+        $group: {
+          _id: "$startTime",
+          bookings: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    // Fill missing hours 6 to 20 (your booking hours range)
+    const fullHours = [];
+    for (let hour = 6; hour <= 20; hour++) {
+      const found = peakHours.find((h) => h._id === hour);
+      fullHours.push({
+        hour: `${hour}:00`,
+        bookings: found ? found.bookings : 0,
+      });
+    }
+
+    res.json(fullHours);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+}
