@@ -6,11 +6,6 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import asyncHandler from "../utils/asyncHandler.js";
 
-/**
- * @desc Create a new review
- * @route POST /api/reviews
- * @access Private (user)
- */
 export const createReview = asyncHandler(async (req, res) => {
   const { bookingId, rating, comment } = req.body;
   const userId = req.user._id;

@@ -216,9 +216,9 @@ const VenuesPage = ({ city = "" }) => {
                     <p className="text-sm text-gray-500 mb-3">
                       <strong>Amenities:</strong> {venue.amenities.join(", ")}
                     </p>
-                    <p className="text-sm text-gray-500 mb-3">
+                    {/* <p className="text-sm text-gray-500 mb-3">
                       <strong>Rating:</strong> {venue.rate} ⭐
-                    </p>
+                    </p> */}
                   </div>
                 </div>
               </NavLink>

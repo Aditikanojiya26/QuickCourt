@@ -11,7 +11,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { NavLink } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
+import { useAuth } from "../../context/AuthContext";
 
 const items = [
   { title: "Home", icon: Home, href: "/" },
@@ -22,14 +22,11 @@ const items = [
     icon: BarChart2,
     href: "/facilityowner/courts",
   },
-
-  
   { title: "Earnings", icon: CreditCard, href: "/facility-owner/earnings" },
   { title: "Booking Calendar", icon: Calendar, href: "/facilityowner/calendar" },
 ];
 export function FacilityOwnerSidebar() {
   const { user, isLoading, isError } = useAuth();
-  console.log("👤 user:", user); // Should log user object directly
   return (
     <Sidebar>
       <SidebarContent>
@@ -41,15 +38,15 @@ export function FacilityOwnerSidebar() {
                 <SidebarMenuItem key={title}>
                   <SidebarMenuButton asChild>
                     <NavLink
-                      to={href}
+                      to={href} end 
                       className={({ isActive }) =>
                         `flex items-center gap-3 px-3 py-2 rounded-md ${
-                          isActive ? "bg-indigo-600 text-white" : "hover:bg-gray-200"
+                          isActive ? "bg-indigo-600 text-white" : "hover:bg-black"
                         }`
                       }
                     >
                       <Icon className="w-7 h-7" />
-                      <span className="text-lg font-medium">{title}</span>
+                      <span className="text-lg ">{title}</span>
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

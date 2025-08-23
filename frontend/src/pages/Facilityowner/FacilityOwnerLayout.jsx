@@ -1,7 +1,8 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { FacilityOwnerSidebar } from "@/components/FacilityOwnerSidebar";
+import { FacilityOwnerSidebar } from "../../components/FacilityOwner/FacilityOwnerSidebar";
+
 
 export default function FacilityOwnerLayout() {
   return (

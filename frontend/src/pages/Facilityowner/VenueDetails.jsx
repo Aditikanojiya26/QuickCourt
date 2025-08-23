@@ -363,11 +363,11 @@ const VenueDetails = () => {
       {/* Price Popup (Modal) */}
       {showPricePopup && selectedCourt && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 backdrop-blur bg-opacity-50 flex items-center justify-center z-50 p-4"
           onClick={closePricePopup}
         >
           <div
-            className="bg-white rounded-lg p-6 max-w-md w-full shadow-lg overflow-auto max-h-[90vh]"
+            className="bg-black/80 text-white rounded-lg p-6 max-w-md w-full shadow-lg overflow-auto max-h-[90vh]"
             onClick={(e) => e.stopPropagation()} // Prevent modal close when clicking inside
           >
             <h3 className="text-xl font-semibold mb-4">
@@ -376,7 +376,7 @@ const VenueDetails = () => {
 
             <table className="w-full border-collapse border border-gray-200 text-sm">
               <thead>
-                <tr className="bg-gray-100">
+                <tr className="bg-black">
                   <th className="border border-gray-200 px-3 py-2 text-left">
                     Day Type
                   </th>

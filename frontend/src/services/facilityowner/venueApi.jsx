@@ -47,3 +47,8 @@ export const fetchCourts = async () => {
   console.log(response.data.data);
   return response.data.data; // <-- important
 };
+
+export const fetchtotalBookings=async () => {
+  const response = await axiosInstance.get("facilitydashboard/getTotalBookings");
+  return response.data.data; // <-- important
+};

@@ -6,25 +6,16 @@ import {
   ResponsiveContainer
 } from "recharts";
 import { useAuth } from "../../context/AuthContext";
+import { fetchtotalBookings } from "../../services/facilityowner/venueApi";
+import { useQuery } from "@tanstack/react-query";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
 
 // Mock static data
 const mockAnalysisData = {
-  totalBookings: 45,
-  activeCourts: 8,
   earnings: 12500,
 };
 
-const mockTrendData = [
-  { label: "Mon", bookings: 5 },
-  { label: "Tue", bookings: 8 },
-  { label: "Wed", bookings: 7 },
-  { label: "Thu", bookings: 10 },
-  { label: "Fri", bookings: 6 },
-  { label: "Sat", bookings: 4 },
-  { label: "Sun", bookings: 5 },
-];
 
 const mockEarningsData = [
   { name: "Badminton", value: 5000 },
@@ -43,7 +34,12 @@ const mockPeakHoursData = [
 
 export default function FacilityOwnerDashboard() {
   const { user, isLoading: userLoading, isError: userError } = useAuth();
-
+  const { data, isLoading: analysisLoading, isError } = useQuery({
+    queryKey: ["totalBookings"],
+    queryFn: fetchtotalBookings,
+  });
+  
+  if(analysisLoading) return <p>Loading...</p>;
   if (userLoading) return <p>Loading user info...</p>;
   if (userError) return <p>Error loading user info.</p>;
 
@@ -58,11 +54,11 @@ export default function FacilityOwnerDashboard() {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white p-6 rounded shadow">
           <p className="text-gray-500">Total Bookings</p>
-          <p className="text-3xl font-semibold">{totalBookings}</p>
+          <p className="text-3xl font-semibold">{data.totalBooking}</p>
         </div>
         <div className="bg-white p-6 rounded shadow">
           <p className="text-gray-500">Active Courts</p>
-          <p className="text-3xl font-semibold">{activeCourts}</p>
+          <p className="text-3xl font-semibold">{data.totalCourts}</p>
         </div>
         <div className="bg-white p-6 rounded shadow">
           <p className="text-gray-500">Earnings</p>
@@ -77,19 +73,21 @@ export default function FacilityOwnerDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Booking Trends */}
-        <div className="bg-white p-6 rounded shadow">
-          <h2 className="text-xl font-semibold mb-4">Booking Trends (Last 7 days)</h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={mockTrendData}>
-              <XAxis dataKey="label" />
-              <YAxis allowDecimals={false} />
-              <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="bookings" stroke="#8884d8" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+       <div className="bg-white p-6 rounded shadow">
+  <h2 className="text-xl font-semibold mb-4">Bookings (Next 7 days)</h2>
+
+  <ResponsiveContainer width="100%" height={200}>
+    <LineChart data={data.chartData}>  
+      <XAxis dataKey="label" />
+      <YAxis allowDecimals={false} />
+      <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
+      <Tooltip />
+      <Legend />
+      <Line type="monotone" dataKey="bookings" stroke="#4f46e5" strokeWidth={2} dot={{ r: 4 }} />
+    </LineChart>
+  </ResponsiveContainer>
+</div>
+
 
         {/* Earnings */}
         <div className="bg-white p-6 rounded shadow">

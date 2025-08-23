@@ -23,6 +23,8 @@ import adminRouter from './routes/admin.routes.js'
 app.use("/api/v1/venues", venueRouter)
 import authRouter from "./routes/googleAuth.routes.js";
 app.use("/api/v1/auth", authRouter);
+import facilitydashboardRoter from "./routes/facilitydashboard.routes.js"
+app.use("/api/v1/facilitydashboard",facilitydashboardRoter)
 import bookingRouter from './routes/booking.routes.js'
 import courtRouter from "./routes/court.routes.js"
 app.use("/api/v1/courts", courtRouter)
