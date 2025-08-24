@@ -20,7 +20,7 @@ const mockAnalysisData = {
 const mockEarningsData = [
   { name: "Badminton", value: 5000 },
   { name: "Tennis", value: 3000 },
-  
+
 ];
 
 const mockPeakHoursData = [
@@ -38,8 +38,8 @@ export default function FacilityOwnerDashboard() {
     queryKey: ["totalBookings"],
     queryFn: fetchtotalBookings,
   });
-  
-  if(analysisLoading) return <p>Loading...</p>;
+  console.log(data);
+  if (analysisLoading) return <p>Loading...</p>;
   if (userLoading) return <p>Loading user info...</p>;
   if (userError) return <p>Error loading user info.</p>;
 
@@ -62,10 +62,10 @@ export default function FacilityOwnerDashboard() {
         </div>
         <div className="bg-white p-6 rounded shadow">
           <p className="text-gray-500">Earnings</p>
-          <p className="text-3xl font-semibold">{earnings.toLocaleString()}</p>
+          <p className="text-3xl font-semibold">₹ {data.totalEarningsResult[0].totalEarnings}</p>
 
         </div>
-        <div className="bg-white p-6 rounded shadow">
+        <div className="bg-white p-6 rounded shadow"> 
           <p className="text-gray-500">Booking Calendar</p>
           <div className="mt-2 text-center text-gray-400">[Calendar component here]</div>
         </div>
@@ -73,20 +73,20 @@ export default function FacilityOwnerDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Booking Trends */}
-       <div className="bg-white p-6 rounded shadow">
-  <h2 className="text-xl font-semibold mb-4">Bookings (Next 7 days)</h2>
+        <div className="bg-white p-6 rounded shadow">
+          <h2 className="text-xl font-semibold mb-4">Bookings (Next 7 days)</h2>
 
-  <ResponsiveContainer width="100%" height={200}>
-    <LineChart data={data.chartData}>  
-      <XAxis dataKey="label" />
-      <YAxis allowDecimals={false} />
-      <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
-      <Tooltip />
-      <Legend />
-      <Line type="monotone" dataKey="bookings" stroke="#4f46e5" strokeWidth={2} dot={{ r: 4 }} />
-    </LineChart>
-  </ResponsiveContainer>
-</div>
+          <ResponsiveContainer width="100%" height={200}>
+            <LineChart data={data.chartData}>
+              <XAxis dataKey="label" />
+              <YAxis allowDecimals={false} />
+              <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
+              <Tooltip />
+              <Legend />
+              <Line type="monotone" dataKey="bookings" stroke="#4f46e5" strokeWidth={2} dot={{ r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
 
 
         {/* Earnings */}
@@ -114,19 +114,26 @@ export default function FacilityOwnerDashboard() {
         </div>
 
         {/* Peak Hours */}
-        <div className="bg-white p-6 rounded shadow">
-          <h2 className="text-xl font-semibold mb-4">Peak Booking Hours</h2>
-          <ResponsiveContainer width="100%" height={200}>
-            <BarChart data={mockPeakHoursData}>
-              <XAxis dataKey="hour" />
-              <YAxis allowDecimals={false} />
-              <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
-              <Tooltip />
-              <Legend />
-              <Bar dataKey="bookings" fill="#82ca9d" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        {/* Peak Hours */}
+<div className="bg-white p-6 rounded shadow">
+  <h2 className="text-xl font-semibold mb-4">Peak Booking Hours</h2>
+  <ResponsiveContainer width="100%" height={200}>
+    <BarChart
+      data={data.bookingsByStartTime.map(item => ({
+        hour: item._id,          // startTime from backend
+        bookings: item.count     // number of bookings
+      }))}
+    >
+      <XAxis dataKey="hour" />
+      <YAxis allowDecimals={false} />
+      <CartesianGrid stroke="#eee" strokeDasharray="5 5" />
+      <Tooltip />
+      <Legend />
+      <Bar dataKey="bookings" fill="#82ca9d" />
+    </BarChart>
+  </ResponsiveContainer>
+</div>
+
       </div>
     </div>
   );
